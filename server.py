@@ -22,7 +22,7 @@ state_lock = asyncio.Lock()
 # Envío de mensaje a todos los clientes
 async def broadcast(msg):
     to_remove = []
-    for ws in clients:
+    for ws in list(clients):
         try:
             await ws.send(msg)
         except websockets.exceptions.ConnectionClosed:
@@ -143,5 +143,3 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("[Servidor] Cerrando...")
-
-# client.py (sin cambios en este ejemplo)

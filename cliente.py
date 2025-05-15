@@ -1,11 +1,13 @@
+# client.py (uso de run_in_executor para no bloquear el bucle)
 import asyncio
 import websockets
 
 async def play():
-    uri = "ws://<IP_DEL_SERVIDOR>:6789"  # Reemplaza con la IP o dominio del servidor
+    uri = "ws://25.54.14.132:6789"  # Reemplaza con tu IP o dominio
+
     try:
         async with websockets.connect(uri) as websocket:
-            # Solicitar y enviar nombre
+            # Solicitar y enviar nombre (bloqueo inicial aceptable)
             greeting = await websocket.recv()
             print(greeting)
             name = input("Tu nombre: ").strip()
@@ -16,9 +18,13 @@ async def play():
             # Saludo inicial
             print(await websocket.recv())
 
+            loop = asyncio.get_event_loop()
+
             async def send_loop():
                 while True:
-                    guess = input("Tu intento: ").strip()
+                    # input sin bloquear el event loop
+                    guess = await loop.run_in_executor(None, input, "Tu intento: ")
+                    guess = guess.strip()
                     if not guess:
                         print("⚠️ Ingresa un número.")
                         continue
@@ -34,6 +40,7 @@ async def play():
                 except websockets.exceptions.ConnectionClosed:
                     print("🚫 Conexión cerrada.")
 
+            # Ejecutar en paralelo sin que input bloquee recv_loop
             await asyncio.gather(send_loop(), recv_loop())
 
     except Exception as e:
